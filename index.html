@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<title>ProjeTeam · Conectando a agenda</title>
+<!--
+  O trampolim do retorno do Google (ProjeTeam / PMO 5.1.4). Fonte: infra/oauth-retorno/ no
+  repositório do PMO; publicado em https://workdevnture.github.io/calendar-api/.
+
+  POR QUE EXISTE: o Google devolve o login com `iss=https://accounts.google.com` (RFC 9207) no
+  endereço, e o firewall (ModSecurity) da hospedagem do ProjeTeam barra um parâmetro que começa
+  com `https://` de outro domínio — antes do sistema. Esta página fica fora daquele firewall: lê
+  o retorno, fica só com `state` e `code` (e o emissor sem o `https://`) e repassa para a
+  organização. Nada é guardado, enviado a terceiros ou carregado de fora.
+
+  PARA ONDE REPASSA: o endereço de volta da organização vai dentro do `state`, em base64url,
+  antes do ponto: `<base64url(https://<org>.projeteam.com.br/api/agenda_oauth.php)>.<aleatório>`.
+  Só endereços `https://*.projeteam.com.br/api/agenda_oauth.php` (e `http://*.localhost/…`, para
+  desenvolvimento) são aceitos — o resto para aqui, com aviso. O `state` inteiro segue adiante e
+  é conferido pela organização contra a sessão de quem iniciou a conexão.
+-->
+<style>
+  :root{color-scheme:light dark}
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f7f8fa;color:#151825;
+       font:15px/1.6 "Inter","Segoe UI",system-ui,-apple-system,sans-serif}
+  @media (prefers-color-scheme:dark){body{background:#0a0c17;color:#dce3ff}.c small{color:#959dbd}}
+  .c{text-align:center;padding:28px;max-width:420px}
+  .s{width:42px;height:42px;margin:0 auto 16px;border-radius:50%;border:3px solid rgb(67 97 238 / .25);border-top-color:#4361ee;animation:g 1s linear infinite}
+  .x{width:42px;height:42px;margin:0 auto 16px;border-radius:50%;display:grid;place-items:center;background:#e11d48;color:#fff;font-weight:700}
+  h1{font-size:17px;margin:0 0 6px}
+  small{color:#525873}
+  @keyframes g{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.s{animation:none}}
+</style>
+</head>
+<body>
+<div class="c" id="c">
+  <div class="s" aria-hidden="true"></div>
+  <h1>Conectando a sua agenda…</h1>
+  <small>ProjeTeam · você volta para o sistema em um instante.</small>
+</div>
+<script>
+(function () {
+  'use strict';
+  var q = new URLSearchParams(location.search);
+  var state = q.get('state') || '';
+
+  function parar(msg) {
+    document.getElementById('c').innerHTML =
+      '<div class="x" aria-hidden="true">!</div><h1>Não foi possível voltar ao ProjeTeam</h1><small></small>';
+    document.querySelector('#c small').textContent = msg;
+  }
+
+  // O endereço de volta da organização, de dentro do `state`.
+  var volta = '';
+  try {
+    var b64 = state.split('.')[0].replace(/-/g, '+').replace(/_/g, '/');
+    while (b64.length % 4) b64 += '=';
+    volta = atob(b64);
+  } catch (e) { volta = ''; }
+
+  var aceito = /^https:\/\/[a-z0-9-]+\.projeteam\.com\.br\/api\/agenda_oauth\.php$/.test(volta)
+            || /^http:\/\/[a-z0-9-]+\.localhost(:\d+)?\/[a-z0-9_\/.-]*api\/agenda_oauth\.php$/.test(volta);
+  if (!aceito) {
+    parar('Este retorno não é de uma organização ProjeTeam. Feche esta janela e conecte a agenda de novo pelo sistema.');
+    return;
+  }
+
+  // Só o que a organização precisa. O `scope` e o `iss` inteiros (com https://) ficam aqui.
+  var r = new URLSearchParams();
+  if (state) r.set('state', state);
+  if (q.get('code')) r.set('code', q.get('code'));
+  if (q.get('error')) r.set('error', q.get('error'));
+  if (q.get('iss')) r.set('emissor', q.get('iss').replace(/^https?:\/\//i, '').replace(/\/+$/, ''));
+  if (!r.has('code') && !r.has('error')) r.set('error', 'resposta_incompleta');
+
+  location.replace(volta + '?' + r.toString());
+})();
+</script>
+</body>
+</html>
