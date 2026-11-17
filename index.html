@@ -6,21 +6,22 @@
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex, nofollow">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
-<title>ProjeTeam · Conectando a agenda</title>
+<title>Devnture Platform · Conectando a agenda</title>
 <!--
-  O trampolim do retorno do Google (ProjeTeam / PMO 5.1.4). Fonte: infra/oauth-retorno/ no
+  O trampolim do retorno do Google (Devnture Platform; PMO 5.1.4, domínios novos na 6.0). Fonte: infra/oauth-retorno/ no
   repositório do PMO; publicado em https://workdevnture.github.io/calendar-api/.
 
   POR QUE EXISTE: o Google devolve o login com `iss=https://accounts.google.com` (RFC 9207) no
-  endereço, e o firewall (ModSecurity) da hospedagem do ProjeTeam barra um parâmetro que começa
+  endereço, e o firewall (ModSecurity) da hospedagem da plataforma barra um parâmetro que começa
   com `https://` de outro domínio — antes do sistema. Esta página fica fora daquele firewall: lê
   o retorno, fica só com `state` e `code` (e o emissor sem o `https://`) e repassa para a
   organização. Nada é guardado, enviado a terceiros ou carregado de fora.
 
   PARA ONDE REPASSA: o endereço de volta da organização vai dentro do `state`, em base64url,
-  antes do ponto: `<base64url(https://<org>.projeteam.com.br/api/agenda_oauth.php)>.<aleatório>`.
-  Só endereços `https://*.projeteam.com.br/api/agenda_oauth.php` (e `http://*.localhost/…`, para
-  desenvolvimento) são aceitos — o resto para aqui, com aviso. O `state` inteiro segue adiante e
+  antes do ponto: `<base64url(https://<org>.devnture.com.br/api/agenda_oauth.php)>.<aleatório>`.
+  Só endereços `https://*.devnture.com.br/api/agenda_oauth.php`, os antigos
+  `https://*.projeteam.com.br/…` (aceitos durante a transição de domínio da 6.0) e
+  `http://*.localhost/…` (desenvolvimento) seguem — o resto para aqui, com aviso. O `state` inteiro segue adiante e
   é conferido pela organização contra a sessão de quem iniciou a conexão.
 -->
 <style>
@@ -29,7 +30,7 @@
        font:15px/1.6 "Inter","Segoe UI",system-ui,-apple-system,sans-serif}
   @media (prefers-color-scheme:dark){body{background:#0a0c17;color:#dce3ff}.c small{color:#959dbd}}
   .c{text-align:center;padding:28px;max-width:420px}
-  .s{width:42px;height:42px;margin:0 auto 16px;border-radius:50%;border:3px solid rgb(67 97 238 / .25);border-top-color:#4361ee;animation:g 1s linear infinite}
+  .s{width:42px;height:42px;margin:0 auto 16px;border-radius:50%;border:3px solid rgb(109 40 217 / .25);border-top-color:#6d28d9;animation:g 1s linear infinite}
   .x{width:42px;height:42px;margin:0 auto 16px;border-radius:50%;display:grid;place-items:center;background:#e11d48;color:#fff;font-weight:700}
   h1{font-size:17px;margin:0 0 6px}
   small{color:#525873}
@@ -41,7 +42,7 @@
 <div class="c" id="c">
   <div class="s" aria-hidden="true"></div>
   <h1>Conectando a sua agenda…</h1>
-  <small>ProjeTeam · você volta para o sistema em um instante.</small>
+  <small>Devnture Platform · você volta para o sistema em um instante.</small>
 </div>
 <script>
 (function () {
@@ -51,7 +52,7 @@
 
   function parar(msg) {
     document.getElementById('c').innerHTML =
-      '<div class="x" aria-hidden="true">!</div><h1>Não foi possível voltar ao ProjeTeam</h1><small></small>';
+      '<div class="x" aria-hidden="true">!</div><h1>Não foi possível voltar à Devnture Platform</h1><small></small>';
     document.querySelector('#c small').textContent = msg;
   }
 
@@ -63,10 +64,10 @@
     volta = atob(b64);
   } catch (e) { volta = ''; }
 
-  var aceito = /^https:\/\/[a-z0-9-]+\.projeteam\.com\.br\/api\/agenda_oauth\.php$/.test(volta)
+  var aceito = /^https:\/\/[a-z0-9-]+\.(devnture|projeteam)\.com\.br\/api\/agenda_oauth\.php$/.test(volta)
             || /^http:\/\/[a-z0-9-]+\.localhost(:\d+)?\/[a-z0-9_\/.-]*api\/agenda_oauth\.php$/.test(volta);
   if (!aceito) {
-    parar('Este retorno não é de uma organização ProjeTeam. Feche esta janela e conecte a agenda de novo pelo sistema.');
+    parar('Este retorno não é de uma organização da Devnture Platform. Feche esta janela e conecte a agenda de novo pelo sistema.');
     return;
   }
 
