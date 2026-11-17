@@ -19,9 +19,9 @@
 
   PARA ONDE REPASSA: o endereço de volta da organização vai dentro do `state`, em base64url,
   antes do ponto: `<base64url(https://<org>.devnture.com.br/api/agenda_oauth.php)>.<aleatório>`.
-  Só endereços `https://*.devnture.com.br/api/agenda_oauth.php`, os antigos
-  `https://*.projeteam.com.br/…` (aceitos durante a transição de domínio da 6.0) e
-  `http://*.localhost/…` (desenvolvimento) seguem — o resto para aqui, com aviso. O `state` inteiro segue adiante e
+  Só endereços `https://*.devnture.com.br/api/agenda_oauth.php` e
+  `http://*.localhost/…` (desenvolvimento) seguem (os `*.projeteam.com.br`, aceitos na
+  transição de domínio da 6.0, saíram com o fim dela) — o resto para aqui, com aviso. O `state` inteiro segue adiante e
   é conferido pela organização contra a sessão de quem iniciou a conexão.
 -->
 <style>
@@ -64,7 +64,7 @@
     volta = atob(b64);
   } catch (e) { volta = ''; }
 
-  var aceito = /^https:\/\/[a-z0-9-]+\.(devnture|projeteam)\.com\.br\/api\/agenda_oauth\.php$/.test(volta)
+  var aceito = /^https:\/\/[a-z0-9-]+\.devnture\.com\.br\/api\/agenda_oauth\.php$/.test(volta)
             || /^http:\/\/[a-z0-9-]+\.localhost(:\d+)?\/[a-z0-9_\/.-]*api\/agenda_oauth\.php$/.test(volta);
   if (!aceito) {
     parar('Este retorno não é de uma organização da Devnture Platform. Feche esta janela e conecte a agenda de novo pelo sistema.');
